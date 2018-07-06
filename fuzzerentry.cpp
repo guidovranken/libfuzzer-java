@@ -143,6 +143,10 @@ class Runner : public MethodRunner {
 
 class Options {
     public:
+        Options(void) {
+            sensorType = JF_SENSOR_CODE_COVERAGE;
+        }
+
         typedef enum {
             JF_SENSOR_CODE_COVERAGE,
             JF_SENSOR_INTENSITY,
