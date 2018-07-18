@@ -12,6 +12,8 @@ You need:
 Put your code in the ```run``` method in ```fuzzertarget/fuzzertarget/FuzzerTarget.java```.
 Return ```true``` from this method to force a crash and write the offending input to disk (for example if a certain exception was thrown).
 
+Set the environment variable ```JAVA_FUZZER_CLASSPATH``` to a colon-separated list of paths to ```JAR``` files to serve as dependencies.
+
 Type ```CXX=clang++ make``` to build.
 
 ```CXXFLAGS``` can be empty (you do NOT need to instrument the C++ files).
