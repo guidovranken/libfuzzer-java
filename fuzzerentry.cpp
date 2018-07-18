@@ -7,6 +7,11 @@
 
 namespace javafuzzer {
 
+#ifdef __linux__
+__attribute__((section("__libfuzzer_extra_counters")))
+#endif
+static uint8_t lf_extra_counters[65536];
+
 class Util {
     public:
         static jclass findClass(JNIEnv* env, const std::string classPath) {
@@ -75,6 +80,7 @@ class Kelinci : public MethodRunner {
         jmethodID kelinciGetCodeCoverage = NULL;
         jmethodID kelinciGetCodeIntensity = NULL;
         jmethodID kelinciGetMaxHeap = NULL;
+        jmethodID kelinciGetCounters = NULL;
 
     public:
         Kelinci(JVM& _jvm) :
@@ -83,7 +89,8 @@ class Kelinci : public MethodRunner {
             kelinciClear(Util::findMethodID(jvm.GetEnv(), kelinciClass, "clear", "()V")),
             kelinciGetCodeCoverage(Util::findMethodID(jvm.GetEnv(), kelinciClass, "getCodeCoverage", "()J")),
             kelinciGetCodeIntensity(Util::findMethodID(jvm.GetEnv(), kelinciClass, "getCodeIntensity", "()J")),
-            kelinciGetMaxHeap(Util::findMethodID(jvm.GetEnv(), kelinciClass, "getMaxHeap", "()J"))
+            kelinciGetMaxHeap(Util::findMethodID(jvm.GetEnv(), kelinciClass, "getMaxHeap", "()J")),
+            kelinciGetCounters(Util::findMethodID(jvm.GetEnv(), kelinciClass, "getCounters", "()[B"))
         { }
 
         void clear(void) {
@@ -99,6 +106,24 @@ class Kelinci : public MethodRunner {
 
         long GetMaxHeap(void) {
             return jvm.GetEnv()->CallStaticLongMethod(kelinciClass, kelinciGetMaxHeap);
+        }
+
+        void GetCounters(uint8_t* out, const size_t outsize) {
+            jbyteArray arr = (jbyteArray)jvm.GetEnv()->CallObjectMethod(kelinciClass, kelinciGetCounters);
+            if ( arr == nullptr ) {
+                throw std::runtime_error(std::string("Call to getCounters() failed"));
+            }
+
+            const int arrayLength = jvm.GetEnv()->GetArrayLength(arr);
+            if ( arrayLength < 0 ) {
+                throw std::runtime_error(std::string("Invalid array in GetCounters()"));
+            }
+            if ( arrayLength != outsize ) {
+                throw std::runtime_error(std::string("Unexpected array length in GetCounters()"));
+            }
+
+            memset(out, 0, outsize);
+            jvm.GetEnv()->GetByteArrayRegion(arr, 0, outsize, (jbyte*)out);
         }
 };
 
@@ -193,6 +218,9 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, const size_t size) {
 
     runner.Init();
     runner.Run(data, size);
+
+    kelinci.GetCounters(lf_extra_counters, sizeof(lf_extra_counters));
+    return 0;
 
     switch ( g_options.GetSensorType() ) {
         case    Options::JF_SENSOR_CODE_COVERAGE:

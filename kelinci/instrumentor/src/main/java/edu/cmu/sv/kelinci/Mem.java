@@ -68,4 +68,8 @@ public class Mem {
 	public static long getMaxHeap() {
 		return maxHeap;
 	}
+
+	public static byte[] getCounters() {
+	    return mem;
+	}
 }
