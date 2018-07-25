@@ -183,7 +183,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, const size_t size) {
     using namespace javafuzzer;
 #define TOSTRING2(x) #x
 #define TOSTRING(x) TOSTRING2(x)
-    static JVM jvm(std::string("java.class.path=.:instrumented:") + std::string(TOSTRING(JAVA_FUZZER_CLASSPATH)));
+    static JVM jvm(std::string("java.class.path=") + std::string(TOSTRING(JAVA_FUZZER_CLASSPATH)));
 #undef TOSTRING2
 #undef TOSTRING
     static Kelinci kelinci(jvm);
