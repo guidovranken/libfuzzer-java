@@ -26,7 +26,7 @@ $(FUZZER_CLASSES) : $(FUZZER_SOURCES)
 
 $(INSTRUMENTED_DIRS) : $(FUZZER_CLASSES)
 	find $(SOURCE_ROOT_DIR) -mindepth 2 -maxdepth 2 ! -name fuzzertarget -exec rm -rf {} \;
-	for f in $(FUZZER_DIRS); do cp -R $(SHARED_DIR)/* $(SOURCE_ROOT_DIR)/$$f/; $(JAVA) -cp internal/single/kelinci/instrumentor/build/libs/kelinci.jar edu.cmu.sv.kelinci.instrumentor.Instrumentor -i $(SOURCE_ROOT_DIR)/$$f -o $(INSTRUMENTED_ROOT_DIR)/$$f; done
+	for f in $(FUZZER_DIRS); do cp -R $(SHARED_DIR)/* $(SOURCE_ROOT_DIR)/$$f/; $(JAVA) -cp $(JAVA_FUZZER_CLASSPATH):internal/single/kelinci/instrumentor/build/libs/kelinci.jar edu.cmu.sv.kelinci.instrumentor.Instrumentor -i $(SOURCE_ROOT_DIR)/$$f -o $(INSTRUMENTED_ROOT_DIR)/$$f; done
 
 $(RUNNER_SOURCES) :
 	mkdir -p $(dir $@)
@@ -46,9 +46,8 @@ internal_single:
 
 clean:
 	make -C internal/single clean
-	rm -rf target/fuzzers/asn1/fuzzertarget/*.class
-	rm -rf target/fuzzers/x509/fuzzertarget/*.class
 	rm -rf $(INSTRUMENTED_ROOT_DIR)
 	rm -rf $(RUNNERS_ROOT_DIR)
 	rm -rf $(FUZZERS_BIN_DIR)
+	find target/ -type f -name '*.class' -exec rm {} \;
 	find $(SOURCE_ROOT_DIR) -mindepth 2 -maxdepth 2 ! -name fuzzertarget -exec rm -rf {} \;
